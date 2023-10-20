@@ -1,6 +1,6 @@
 JENKINS INTEGRATION WITH DOCKER IMAGES:
 =======================================
-# This course is designed to run Jenkins CI/CD using containerization technology
+# This writeup is designed to run Jenkins CI/CD using containerization technology
 #docker images of jenkins/sonarqube/nexus/tomcat are used and integrated for build
 
 #RESOURCE:
