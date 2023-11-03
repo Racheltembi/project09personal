@@ -93,16 +93,17 @@ spec: # this provides additional information about the object to create. it varr
 +  example:
 ```sh
 apiVersion: v1
-Kind: Pod
+kind: Pod
 metadata:
   name: myapp 
   labels:
     app: myapp
     type: front-end
 spec:
-  container:
+  containers:  
   - name: nginx-container
     image: nginx
+
 ```
 ```sh
 - kubectl apply/create -f <filename> #to create declaratively from a yml file
@@ -148,22 +149,25 @@ spec:
 #This is because it can manage pods that were not created to be managed by the rs
 ```sh
 apiVersion: apps/v1
-Kind: ReplicaSet
-metadata: 
-  name: myapp-rc
-  labels:
-    app: myapp 
-    type: front-end
+kind: ReplicaSet  # <-- Specify the correct kind
+metadata:
+  name: myapp-rs
 spec:
-  template:
-    container:
-    - name: nginx-container
-      image: nginx 
   replicas: 3
   selector:
     matchLabels:
-      type: front-end # This must match the label that was input in the object metadata section
-```
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+        type: front-end  # This must match the label that was input in the object metadata section
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+
+   
 ```sh
 k get rs 
 k get pods 
@@ -192,28 +196,25 @@ suppose an update has issues, you will want to do a rollback to the previous wor
 
 ```sh
 apiVersion: apps/v1
-Kind: Deployment
-metadata: 
+kind: Deployment
+metadata:
   name: myapp-deployment
-  labels:
-    app: myapp 
-    type: front-end
 spec:
-  template:
-    metadata:
-      name: myapp
-      labels:
-        app: myapp
-        type: front-end
-    spec:
-      container:
-      - name: nginx-container
-        image: nginx 
   replicas: 3
   selector:
     matchLabels:
-      type: front-end # This must match the label that was input in the object metadata section
-```
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+        type: front-end # This must match the label that was input in the object metadata section
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+
+    
 ```sh
 kubectl get deployment
 kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
@@ -270,17 +271,19 @@ cluster. Service is a cluster-wide resource in k8s.
   - This type of service that allows communication between pods in a cluster is called cluster IP service.
 ```sh
 apiVersion: v1
-Kind: Service
-metadata: 
-  name: backend
+kind: Service
+metadata:
+  name: myapp-service
 spec:
-  type: ClusterIP
-  ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
   selector:
     app: myapp # This is the label that was used in the deployment metadata section
-    type: backend
+  ports:
+    - protocol: TCP
+      port: 80  # (port on Pod). it will assume port if not specified
+      targetPort: 80  # port on service. this is a mandatory field
+  type: ClusterIP
+
+ 
 ```
 kubectl create -f <filename>
 kubectl get svc 
@@ -294,17 +297,18 @@ However, end users need to be provided with a single endpoint that can route tra
 K8s have native support for cloud platforms 
 ```sh
 apiVersion: v1
-Kind: Service
+kind: Service
 metadata: 
   name: backend
 spec:
   type: LoadBalancer
   ports:
-    - targetPort: 80  # (port on Pod). it will assume port if not specified
-      port: 80 # port on service. this is a mandatory field
+    - targetPort: 80
+      port: 80
   selector:
-    app: myapp # This is the label that was used in the deployment metadata section
+    app: myapp
     type: backend
+
 ```
 ## NAMESPACES:
 
@@ -365,7 +369,7 @@ kubectl get pods --all-namespaces
 To set a limit for resources in a namespace, create a resource-quota object in
 ```sh
 apiVersion: v1
-Kind: ResourceQuota
+kind: ResourceQuota
 metadata:
   name: compute-quota
   namespace: dev
@@ -376,6 +380,7 @@ spec:
     requests.memory: 5Gi
     limits.cpu: "10"
     limits.memory: 10Gi
+
 ```
 kubectl apply -f <filename>
 
